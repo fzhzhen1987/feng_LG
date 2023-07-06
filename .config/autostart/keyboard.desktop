@@ -1,0 +1,6 @@
+[Desktop Entry]
+Terminal=false
+Type=Application
+StartupNotify=false
+Name=Keyboard setting
+Exec=/home/feng/keysetting.sh
