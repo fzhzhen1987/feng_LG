@@ -1,0 +1,17 @@
+[user]
+	email = fzhzhen1987@yahoo.co.jp
+	name = feng
+[color]
+	ui = auto
+[core]
+	pager = less
+	editor = nvim
+	quotepath = false
+	pager = delta
+[pack]
+	threads = 4
+[delta]
+	navigate = true
+	side-by-side = true
+	line-numbers = true
+	light = false

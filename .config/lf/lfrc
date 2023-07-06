@@ -1,0 +1,452 @@
+# Luke's lf settings
+
+# Note on Image Previews
+# For those wanting image previews, like this system, there are four steps to
+# set it up. These are done automatically for LARBS users, but I will state
+# them here for others doing it manually.
+#
+# 1. ueberzug must be installed.
+# 2. The scope file (~/.config/lf/scope for me), must have a command similar to
+#    mine to generate ueberzug images.
+# 3. A `set cleaner` line as below is a cleaner script.
+# 4. lf should be started through a wrapper script (~/.local/bin/lfub for me)
+#    that creates the environment for ueberzug. This command can be be aliased
+#    in your shellrc (`alias lf="lfub") or if set to a binding, should be
+#    called directly instead of normal lf.
+
+# Basic vars
+set shellopts '-eu'
+set ifs "\n"
+set scrolloff 10
+set icons
+set period 1
+set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg:*.run.xml"
+set previewer '~/.config/lf/scope.sh'
+
+# cmds/functions
+# open commander default 'l' and '<right>'
+cmd open ${{
+    test -L $f && f=$(readlink -f $f)
+    case $(file --mime-type $f -b) in
+        text/*) $EDITOR $fx;;
+        application/json) $EDITOR $fx;;
+        *) for f in $fx; do xdg-open $f > /dev/null 2> /dev/null & done;;
+    esac
+}}
+# open with custom application
+cmd openwith %"$@" "$fx"
+# create direactory
+cmd mkdir $mkdir -p "$(echo $* | tr ' ' '\ ')"
+
+# extrat compress files
+cmd extract ${{
+    set -f
+    case $f in
+        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
+        *.tar.gz|*.tgz) tar xzvf $f;;
+        *.tar.xz|*.txz) tar xJvf $f;;
+        *.zip) unzip -O gbk $f;;
+        *.rar) unrar x $f;;
+        *.7z) 7z x $f;;
+    esac
+}}
+
+# compress current file or selected files with zip
+cmd zip ${{
+    set -f
+    mkdir $1
+    cp -r $fx $1
+    zip -r $1.zip $1
+    rm -rf $1
+}}
+
+# delete files
+cmd delete ${{
+	clear; tput cup $(($(tput lines)/3)); tput bold
+	set -f
+	printf "%s\n\t" "$fx"
+	printf "delete?[y/N]"
+	read ans
+	[ $ans = "y" ] && rm -rf -- $fx
+}}
+
+
+# 预览图片
+cmd img ${{
+    sxiv *.png *.jpg *.svg *.jpeg 2>/dev/null
+}}
+
+
+cmd setbg "$1"
+# change multi files name
+cmd bulk-rename ${{
+    old="$(mktemp)"
+    new="$(mktemp)"
+    if [ -n "$fs" ]; then
+        fs="$(basename -a $fs)"
+    else
+        fs="$(ls)"
+    fi
+    printf '%s\n' "$fs" >"$old"
+    printf '%s\n' "$fs" >"$new"
+    $EDITOR "$new"
+    [ "$(wc -l < "$new")" -ne "$(wc -l < "$old")" ] && exit
+    paste "$old" "$new" | while IFS= read -r names; do
+        src="$(printf '%s' "$names" | cut -f1)"
+        dst="$(printf '%s' "$names" | cut -f2)"
+        if [ "$src" = "$dst" ] || [ -e "$dst" ]; then
+            continue
+        fi
+        mv -- "$src" "$dst"
+    done
+    rm -- "$old" "$new"
+    lf -remote "send $id unselect"
+}}
+
+#Combining fzf with ripgrep, you can interactively search in the contents of files under the current directory and select a file from the results:
+cmd fzf_search ${{
+	result="$( \
+		RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case"
+		FZF_DEFAULT_COMMAND="$RG_PREFIX '^\s*$'" \
+			fzf \
+			--ansi \
+			--bind "change:reload:$RG_PREFIX {q} || true" \
+			--delimiter : \
+			--preview 'file={1}; line={2}; if command -v nkf >/dev/null 2>&1; then nkf -w "$file" | bat --color=always --file-name="$file" --highlight-line "$line"; else bat --color=always "$file" --highlight-line "$line"; fi' \
+			--preview-window 'down,60%,border-top,+{2}+3/3,~3' \
+			--layout=reverse --header 'Search in files'
+	)"
+	if [ ! -z "$result" ]; then
+		file=$(echo "$result" | cut -d':' -f1)
+		line=$(echo "$result" | cut -d':' -f2)
+		lf -remote "send $id select \"$file\""
+		# 根据不同的编辑器使用不同的跳转语法
+		if [ -n "$EDITOR" ]; then
+			case "$EDITOR" in
+				*nvim*|*vim*)
+					$EDITOR "+$line" "$file"
+					;;
+				*emacs*)
+					$EDITOR "+$line" "$file"
+					;;
+				*nano*)
+					$EDITOR "+$line" "$file"
+					;;
+				*code*)
+					$EDITOR -g "$file:$line"
+					;;
+				*)
+					# 默认尝试 +行号 格式
+					$EDITOR "+$line" "$file"
+					;;
+			esac
+		fi
+	fi
+}}
+
+# charge U disk
+cmd diskmount ${{
+# Get the target volume
+target_vol=$(lsblk | fzf --reverse | sed 's/^[^[:alnum:]]*//' | cut -d' ' -f1)
+# Is it encrypted or something?
+if [[ $(lsblk -o NAME,FSTYPE | sed 's/^[^[:alnum:]]*//' | grep "$target_vol" | awk '{print $2}') == "crypto_LUKS" ]]; then
+	echo "Volume is encrypted"
+	udisksctl unlock -b /dev/"$target_vol"
+	list_mount
+	exit 0
+fi
+# Is it internal?
+if [[ $(lsblk -o NAME,RM | sed 's/^[^[:alnum:]]*//' | grep "$target_vol " | awk '{print $2}') -eq 1 ]]; then
+	removable=true
+else
+	removable=false
+fi
+# Adjust to proper device path
+if [[ -e /dev/"$target_vol" ]]; then
+	target_vol="/dev/$target_vol"
+elif [[ -e /dev/mapper/"$target_vol" ]]; then
+	target_vol="/dev/mapper/$target_vol"
+else
+	echo "Something vent wrong, no such volume?"
+fi
+if $removable; then
+	udisksctl mount -b "$target_vol"
+	echo "Press Return to continue"
+	read
+else
+	echo "Input mountpoint:"
+
+	read mountpoint
+
+	while ! [[ -d "$mountpoint" ]]; do
+		sudo mkdir -p "$mountpoint" ||\
+		echo "$mountpoint is not a possible mountpoint.
+Input new mountpoint:" && read mountpoint
+	done
+	sudo mount "$target_vol" "$mountpoint" && \
+	echo "Mounted $target_vol to $mountpoint
+Press Return to continue"
+read
+fi
+}}
+
+# dragon cmd
+cmd dragon %dragon-drag-and-drop -a -x $fx
+cmd dragon-stay %dragon-drag-and-drop -a $fx
+cmd dragon-individual %dragon-drag-and-drop $fx
+cmd cpdragon ${{
+files=$(dragon-drag-and-drop -t -x)
+
+for file in $files
+do
+  path=${file#file://}
+  name=$(basename "$path")
+  cp "$path" "$(pwd)/$name"
+done
+}}
+
+cmd mvdragon ${{
+files=$(dragon-drag-and-drop -t -x)
+
+for file in $files
+do
+  path=${file#file://}
+  name=$(basename "$path")
+  mv "$path" "$(pwd)/$name"
+done
+}}
+# download file
+cmd dlfile ${{
+url=$(dragon-drag-and-drop -t -x)
+
+if [ -n "$url" ]; then
+  printf "File Name: "
+  name=""
+  while [ -z $name ] || [ -e $name ]
+  do
+    read -r name
+    if [ -e "$name" ]; then
+      printf "File already exists, overwrite (y|n): "
+      read -r ans
+
+      if [ "$ans" = "y" ]; then
+        break
+      else
+        printf "File Name: "
+      fi
+    fi
+  done
+
+  # Download the file with curl
+  [ -n "$name" ] && curl -o "$name" "$url" || exit 1
+else
+  exit 1
+fi
+}}
+
+# Trash cli bindings
+cmd trash ${{
+  files=$(printf "$fx" | tr '\n' ';')
+  while [ "$files" ]; do
+    # extract the substring from start of string up to delimiter.
+    # this is the first "element" of the string.
+    file=${files%%;*}
+
+    trash-put "$(basename "$file")"
+    # if there's only one element left, set `files` to an empty string.
+    # this causes us to exit this `while` loop.
+    # else, we delete the first "element" of the string from files, and move onto the next.
+    if [ "$files" = "$file" ]; then
+      files=''
+    else
+      files="${files#*;}"
+    fi
+  done
+}}
+
+cmd clear_trash %trash-empty
+
+cmd restore_trash ${{
+  trash-restore
+}}
+
+# yank filename without extension
+cmd yank-basename-without-extension ${{
+    echo "$fx" |
+      xargs -r -d '\n' basename -a |
+      awk -e '{
+        for (i=length($0); i > 0; i--) {
+          if (substr($0, i, 1) == ".") {
+            if (i == 1) print $0
+            else print substr($0, 0, i-1)
+
+            break
+          }
+        }
+
+        if (i == 0)
+          print $0
+      }' |
+      if [ -n "$fs" ]; then cat; else tr -d '\n'; fi |
+      xclip -i -selection clipboard
+}}
+
+cmd fzf_jump ${{
+    res="$(fd --hidden --follow -E ".git" -E "node_modules" -E ".ccls-cache" . | fzf --reverse --header='Jump to location' | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    if [ -d "$res" ] ; then
+        cmd="cd"
+    elif [ -f "$res" ] ; then
+        cmd="select"
+    else
+        exit 0
+    fi
+    lf -remote "send $id $cmd \"$res\""
+}}
+
+cmd fzf_file ${{
+    # 创建预览命令
+    preview_cmd='if [ -d {} ]; then ls -la {}; else if command -v nkf >/dev/null 2>&1; then nkf -w {} | bat --color=always --file-name={}; else bat --color=always {}; fi; fi'
+
+    res="$(find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3- | \
+        fzf +m --preview "$preview_cmd" --preview-window 'down:60%:wrap')"
+    if [ -d "$res" ] ; then
+        cmd="cd"
+    elif [ -f "$res" ] ; then
+        cmd="select"
+    else
+        exit 0
+    fi
+    lf -remote "send $id $cmd \"$res\""
+}}
+
+cmd chmod ${{
+	printf "Mode Bits: "
+	read ans
+
+	for file in "$fx"
+	do
+		chmod $ans $file
+	done
+
+	lf -remote 'send reload'
+}}
+
+# スマートプレビューコマンド（エンコーディング自動処理、シンタックスハイライト保持）
+cmd smart_preview ${{
+    if command -v nkf >/dev/null 2>&1; then
+        # --file-nameパラメータでbatに元のファイル名を伝える
+        nkf -w "$f" | bat --color=always --paging=always --file-name="$f"
+    else
+        bat --color=always --paging=always "$f"
+    fi
+}}
+
+
+#########################################################################################
+
+# Bindings
+# Remove some defaults
+map d
+map f
+map F
+map t
+map y
+map r
+map <c-j>
+map <c-k>
+map "'"
+map '"'
+map m
+map <c-b>
+map <c-e>
+map <c-y>
+map <c-n>
+map <c-p>
+map [
+map ]
+map R
+map u
+# map o push :openwith<space>
+# map <c-p> img
+
+########################################################################################
+# Dragon mapping
+# map dr dragon
+# map ds dragon-stay
+# map di dragon-individual
+# map dm mvdragon
+# map dc cpdragon
+# map dl dlfile
+
+
+# Source Bookmarks
+source "~/.config/lf/shortcutrc"
+
+map z set hidden!
+# 上下左右
+map l open
+map j updir
+map i up
+map k down
+
+# 文件操作
+map dd cut
+map D delete
+map yy copy
+map M push :mkdir<space>
+map c chmod
+
+# 选择文件
+map V unselect
+map v invert
+
+map r push A<a-b><a-b><a-f> # 扩展名前
+map a bulk-rename
+map A rename # 扩展名后需要
+
+# 压缩/解压缩
+map Z push :zip<space>
+map X extract
+
+
+# 路径或文件名复制,用不了
+# map yd $dirname -- "$f" | head -c-1 | xclip -i -selection clipboard
+# map yp $printf "%s" "$fx" | xclip -selection clipboard
+# map yn $basename -a -- $fx | head -c-1 | xclip -i -selection clipboard
+# map ye yank-basename-without-extension
+
+# 变换布局
+map w %lf -remote "send $id set ratios 1:2"
+map W %lf -remote "send $id set ratios 1:2:3"
+
+
+# 书签操作
+map "`" mark-load
+map <tab> mark-save
+map "'" mark-remove
+
+map <c-q> cmd-escape
+
+map <c-l> push $lazygit<enter>
+
+# 文件编辑
+map e :smart_preview
+map N push :!nvim<space>
+map u :diskmount
+map <enter> shell
+
+# 搜索
+map <c-g> :fzf_search
+map f :fzf_jump
+map <c-f> :fzf_file
+
+# 菜单
+map ta set info size:time
+map ts set info size
+map tt set info time
+map sn :set sortby natural; set info
+map ss :set sortby size; set info size
+map st :set sortby time; set info time
+map sa :set sortby atime; set info atime
+map sc :set sortby ctime; set info ctime
+map se :set sortby ext; set info
