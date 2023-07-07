@@ -254,5 +254,7 @@ clear control
 keycode  66 = Control_L NoSymbol Control_L
 keycode  37 = Caps_Lock NoSymbol Caps_Lock
 
+keycode 105 = Print Sys_Req Print Sys_Req
+
 add lock = Caps_Lock
 add control = Control_L
