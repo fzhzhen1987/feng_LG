@@ -246,3 +246,13 @@ keycode 252 = XF86BrightnessAuto NoSymbol XF86BrightnessAuto
 keycode 253 = XF86DisplayOff NoSymbol XF86DisplayOff
 keycode 254 = XF86WWAN NoSymbol XF86WWAN
 keycode 255 = XF86RFKill NoSymbol XF86RFKill
+
+
+clear lock
+clear control
+
+keycode  66 = Control_L NoSymbol Control_L
+keycode  37 = Caps_Lock NoSymbol Caps_Lock
+
+add lock = Caps_Lock
+add control = Control_L
