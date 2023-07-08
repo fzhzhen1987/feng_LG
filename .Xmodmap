@@ -250,11 +250,15 @@ keycode 255 = XF86RFKill NoSymbol XF86RFKill
 
 clear lock
 clear control
+clear mod1
 
 keycode  66 = Control_L NoSymbol Control_L
 keycode  37 = Caps_Lock NoSymbol Caps_Lock
 
 keycode 105 = Print Sys_Req Print Sys_Req
 
+keycode 108 = XF86WebCam
+
 add lock = Caps_Lock
 add control = Control_L
+add mod1 = Alt_L
