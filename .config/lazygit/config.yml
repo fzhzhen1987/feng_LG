@@ -1,0 +1,141 @@
+confirmonquit: false
+git:
+  autofetch: true
+  merging:
+    manualcommit: false
+  skiphookprefix: WIP
+  paging:
+    colorArg: always
+    pager: delta --paging=never --24-bit-color=never --line-numbers --side-by-side
+gui:
+  commitlength:
+    show: true
+  mouseEvents: false
+  scrollheight: 2
+  scrollpastbottom: true
+  theme:
+    lightTheme: false
+    activeBorderColor:
+      - cyan
+      - bold
+    inactiveBorderColor:
+      - white
+    optionsTextColor:
+      - blue
+    selectedLineBgColor:
+      - yellow
+    selectedRangeBgColor:
+      - blue
+reporting: "off"
+splashupdatesindex: 0
+startuppopupversion: 1
+keybinding:
+    universal:
+      prevItem-alt: 'k' # go one line up
+      nextItem-alt: 'j' # go one line down
+      prevItem: 'k' # go one line up
+      nextItem: 'j' # go one line down
+      prevBlock: '<c-p>' # goto the previous block / panel
+      nextBlock: '<c-n>' # goto the next block / panel
+      prevBlock-alt: '<c-p>' # goto the previous block / panel
+      nextBlock-alt: '<c-n>' # goto the next block / panel
+      quit: 'q'
+      quit-alt1: 'q' # alternative/alias of quit
+      return: '<c-q>' # return to previous menu, will quit if there's nowhere to return
+      quitWithoutChangingDirectory: 'Q'
+      togglePanel: '<tab>' # goto the next panel
+      nextScreenMode: 'x'
+      prevScreenMode: 'x'
+      prevPage: ',' # go to next page in list
+      nextPage: '.' # go to previous page in list
+      gotoTop: '<' # go to top of list
+      gotoBottom: '>' # go to bottom of list
+      nextMatch: 'n'
+      prevMatch: 'N'
+      nextTab: '<c-f>'
+      prevTab: '<c-b>'
+      optionMenu: '?' # show help menu
+      optionMenu-alt1: '?' # show help menu
+      select: '<space>'
+      goInto: '<enter>'
+      confirm: '<enter>'
+      confirm-alt1: 'y'
+      remove: 'd'
+      new: 'n'
+      edit: 'e'
+      openFile: 'o'
+      scrollUpMain: '<c-k>' # main panel scrool up
+      scrollDownMain: '<c-j>' # main panel scrool down
+      executeCustomCommand: ':'
+      createRebaseOptionsMenu: 'm'
+      pushFiles: 'P'
+      pullFiles: 'p'
+      refresh: 'R'
+      createPatchOptionsMenu: '<c-o>'
+      undo: 'z'
+      redo: '<c-z>'
+      filteringMenu: '<c-s>'
+      diffingMenu: '<c-e>'
+      diffingMenu-alt: '<c-e>' # deprecated
+      submitEditorText: '<enter>'
+      appendNewline: '<tab>'
+      copyToClipboard: '<c-c>' #no clipboard can use.
+    status:
+      checkForUpdate: 'u'
+      recentRepos: '<enter>'
+    files:
+      toggleStagedAll: '<c-a>' # stage/unstage all
+      commitChanges: 'c'
+      commitChangesWithEditor: 'C'
+      amendLastCommit: 'a'
+      viewResetOptions: 'D'
+      fetch: 'f'
+      commitChangesWithoutHook: 'w' # commit changes without pre-commit hook
+      ignoreFile: 'i'
+      refreshFiles: 'r'
+      stashAllChanges: 'S'
+      viewStashOptions: 's'
+    branches:
+      createPullRequest: 'o'
+      checkoutBranchByName: 'c'
+      forceCheckoutBranch: 'F'
+      rebaseBranch: 'r'
+      mergeIntoCurrentBranch: 'M'
+      viewGitFlowOptions: 'i'
+      fastForward: 'f' # fast-forward this branch from its upstream
+      pushTag: 'P'
+      setUpstream: 'u' # set as upstream of checked-out branch
+      fetchRemote: 'f'
+    commits:
+      squashDown: 's'
+      renameCommit: 'r'
+      renameCommitWithEditor: 'R'
+      viewResetOptions: 'G'
+      markCommitAsFixup: 'f'
+      createFixupCommit: 'F' # create fixup commit for this commit,当前提交名字为(修改某次提交)
+      squashAboveCommits: 'S'
+      moveDownCommit: '<down>' # move commit down one
+      moveUpCommit: '<up>' # move commit up one
+      amendToCommit: 'a'
+      pickCommit: 'p' # pick commit (when mid-rebase)
+      revertCommit: 't'
+      cherryPickCopy: 'c'
+      cherryPickCopyRange: 'C'
+      pasteCommits: 'v'
+      tagCommit: 'T'
+      checkoutCommit: '<space>'
+      resetCherryPick: '<c-g>'
+      copyCommitMessageToClipboard: '<c-y>'
+    stash:
+      popStash: 'g'
+    commitFiles:
+      checkoutCommitFile: 'c'
+    main:
+      toggleDragSelect: 'v'
+      toggleDragSelect-alt: 'V'
+      toggleSelectHunk: 'a'
+      pickBothHunks: 'b'
+    submodules:
+      init: 'i'
+      update: 'u'
+      bulkMenu: 'b'
