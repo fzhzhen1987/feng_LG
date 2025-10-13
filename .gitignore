@@ -1,0 +1,24 @@
+# 忽略 memo 目录的所有变更
+memo/
+
+# 忽略 work 目录
+work/
+
+# 忽略配置和缓存目录
+.cache/
+.config/
+.fzf/
+.local/
+.oh-my-zsh/
+.ssh/
+
+# 忽略 shell 和工具的历史记录/缓存文件
+.zsh_history
+.zcompdump*
+.lesshst
+.tig_history
+.fzf.bash
+.fzf.zsh
+.rainbarf.dat
+.wget-hsts
+.sudo_as_admin_successful
