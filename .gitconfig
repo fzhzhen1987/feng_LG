@@ -1,0 +1,15 @@
+[user]
+	email = fzhzhen1987@yahoo.co.jp
+	name = feng
+[color]
+	ui = auto
+[core]
+	pager = less
+	editor = nvim
+	quotepath = false
+	autocrlf = false
+[pack]
+	threads = 4
+[pull]
+	# git config --global pull.rebase true
+	# rebase = true
